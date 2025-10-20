@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,6 +54,8 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #818cf8; }
     </style>
 </head>
+
+
 <body class="text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
@@ -123,38 +126,21 @@
     </div>
 
 <script>
-// const benchmarkCsvData = `Rank,Model,Parameters,Dimensions,Max_Tokens,Retrieval,Classification,Clustering,Reranking,STS,Multilingual
-// 1,llama-embed-nemotron-8b,7B,4096,32768,68.69,73.21,54.35,67.78,79.41,No
-// 2,gemini-embedding-001,Unknown,3072,2048,67.71,71.82,54.59,65.58,79.4,Yes
-// 3,Qwen3-Embedding-8B,7B,4096,32768,70.88,74.0,57.65,65.63,81.08,Yes
-// 4,Qwen3-Embedding-4B,4B,2560,32768,69.6,72.33,57.15,65.08,80.86,Yes
-// 5,Qwen3-Embedding-0.6B,595M,1024,32768,64.65,66.83,52.33,61.41,76.17,Yes
-// 6,embedding-gemma-7b,7B,3072,8192,67.31,69.58,54.91,67.07,80.34,No
-// 7,bge-m3,1.4B,1024,8192,66.07,70.18,52.28,64.71,79.56,Yes
-// 8,multilingual-e5-large-instruct,560M,1024,514,57.12,64.94,50.75,62.61,76.81,Yes
-// 9,gte-Qwen2-7B-instruct,7B,3584,32768,60.08,61.55,52.77,65.55,73.98,Yes
-// 10,e5-mistral-7b-instruct,7B,4096,32768,64.44,68.62,53.0,65.3,78.29,No
-// 11,SFR-Embedding-Mistral,7B,4096,32768,59.44,60.02,51.84,64.19,74.79,No
-// 12,llm-embedder,1.3B,1024,512,58.82,65.65,52.02,64.67,77.29,No
-// 13,gte-large-en-v1.5,335M,1024,8192,62.2,66.42,52.88,64.3,77.58,No
-// 14,bge-large-en-v1.5,335M,1024,512,63.91,66.7,52.75,64.25,78.36,No
-// 15,instructor-xl,1.5B,768,512,56.78,63.45,52.92,63.6,76.9,No
-// 16,GritLM-7B,7B,4096,4096,62.63,64.12,49.88,62.83,75.33,No
-// 17,multilingual-e5-large,560M,1024,512,56.63,64.91,50.75,61.27,76.38,Yes
-// 18,gte-base-en-v1.5,110M,768,8192,60.85,65.23,51.93,63.31,76.64,No
-// 19,bge-base-en-v1.5,110M,768,512,62.17,65.17,52.12,63.02,77.06,No
-// 20,instructor-large,335M,768,512,56.12,62.85,52.54,63.03,76.43,No
-// `;
 
 let benchmarkCsvData = "";
 
 async function loadBenchmarkCsv() {
-    const response = await fetch("benchmark_data.csv"); // Le fichier CSV doit être dans le même dossier
+    const csvUrl = "https://raw.githubusercontent.com/samir-aitabbou/AI-Embedding-Advisor-Pro/refs/heads/master/benchmark_data.csv";
+
+    const response = await fetch(csvUrl);
     if (!response.ok) {
-        throw new Error("Impossible de charger le fichier benchmark.csv");
+        throw new Error("Impossible de charger les données du benchmark.");
     }
+
     benchmarkCsvData = await response.text();
+    console.log("✅ Benchmark chargé depuis GitHub !");
 }
+
 
 const USE_CASE_COLUMNS = ['Retrieval', 'Classification', 'Clustering', 'Reranking', 'STS'];
 
