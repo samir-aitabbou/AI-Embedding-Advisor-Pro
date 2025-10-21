@@ -1,3 +1,9 @@
+<!-- ![Demo Chatbot](./assets/demo.gif) -->
+
+<p align="center">
+  <img src="./assets/demo.gif" alt="Chatbot Demo" width="600"/>
+</p>
+
 #  AI Embedding Advisor Pro
 
 **AI Embedding Advisor Pro** est une application web orientée utilisateur qui simplifie et optimise le choix du **modèle d’embeddings** (représentations vectorielles de texte) pour un projet NLP donné.  
