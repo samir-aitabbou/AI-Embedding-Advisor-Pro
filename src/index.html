@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Embedding Advisor Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="text-gray-800">
+    <nav class="absolute top-4 left-4">
+        <a href="https://huggingface.co/spaces/mteb/leaderboard" target="_blank"
+            class="flex items-center space-x-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Base de données MTEB</span>
+        </a>
+    </nav>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-extrabold text-gray-900">
+                <span class="gradient-text">AI Embedding Advisor</span> Pro
+            </h1>
+            <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Laissez l'IA analyser vos besoins et le benchmark pour
+                une recommandation sur mesure.</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-lg border border-gray-200 h-fit sticky top-8">
+                <h2 class="text-2xl font-bold mb-5 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 text-indigo-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                    Décrivez votre projet
+                </h2>
+
+                <div class="mb-5">
+                    <label for="dataDescription" class="block text-sm font-semibold text-gray-700 mb-2">1. Quels sont
+                        vos objectifs ?</label>
+                    <textarea id="dataDescription" rows="10"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                        placeholder="Ex: 'Je construis un chatbot pour un site e-commerce. Il doit répondre aux questions sur les produits en plusieurs langues, à partir de descriptions courtes. La vitesse de réponse est critique.'"></textarea>
+                    <p class="text-xs text-gray-500 mt-2">Mots-clés : multilingue, documents longs/courts, temps-réel,
+                        code source, etc.</p>
+                </div>
+
+                <div class="mb-6">
+                    <label for="useCase" class="block text-sm font-semibold text-gray-700 mb-2">2. Quel est votre cas
+                        d'usage principal ?</label>
+                    <select id="useCase"
+                        class="w-full p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        </select>
+                </div>
+
+                <button id="analyzeBtn"
+                    class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 flex items-center justify-center">
+                    <span id="btn-text" class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                        </svg>
+                        Lancer l'Analyse IA
+                    </span>
+                    <div id="btn-loader"
+                        class="hidden h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin">
+                    </div>
+                </button>
+            </div>
+
+            <div id="results-container" class="lg:col-span-2">
+                <div id="placeholder"
+                    class="flex items-center justify-center bg-white/50 p-6 rounded-2xl border-2 border-dashed border-gray-300 h-96">
+                    <div class="text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-16 w-16 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                        </svg>
+                        <h3 class="mt-4 text-lg font-medium text-gray-900">Les recommandations de l'IA apparaîtront
+                            ici</h3>
+                        <p class="mt-1 text-sm text-gray-500">Décrivez votre projet pour commencer.</p>
+                    </div>
+                </div>
+                <div id="loading"
+                    class="hidden flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-lg border-gray-200 h-96">
+                    <div class="loader-dots">
+                        <div class="dot1"></div>
+                        <div class="dot2"></div>
+                        <div class="dot3"></div>
+                    </div>
+                    <p class="mt-6 text-lg font-semibold text-gray-700">L'expert IA analyse votre demande...</p>
+                    <p class="text-sm text-gray-500">Cela peut prendre quelques secondes.</p>
+                </div>
+                <div id="error"
+                    class="hidden flex flex-col items-center justify-center bg-red-50 p-6 rounded-2xl shadow-lg border-2 border-dashed border-red-300 h-96">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-500" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <h3 class="mt-4 text-lg font-semibold text-red-700">Une erreur est survenue</h3>
+                    <p id="error-message" class="mt-2 text-sm text-red-600">Impossible de contacter le LLM. Veuillez
+                        réessayer.</p>
+                </div>
+                <div id="results-content" class="hidden space-y-8">
+                    </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="main.js" defer></script>
+
+</body>
+</html>

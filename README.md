@@ -1,143 +1,180 @@
-# 🧠 AI Embedding Advisor Pro
+#  AI Embedding Advisor Pro
 
-**AI Embedding Advisor Pro** est une application web interactive qui utilise l’intelligence artificielle pour recommander les **meilleurs modèles d’embeddings** (représentations vectorielles de texte) en fonction des besoins spécifiques d’un projet NLP (Natural Language Processing).  
-L’outil croise les besoins de l’utilisateur (objectifs, contraintes, cas d’usage) avec un **benchmark de modèles d’embeddings** pour proposer un **top 3 personnalisé**.
-
----
-
-## 🚀 Fonctionnalités principales
-
-- 🔍 **Analyse automatique du besoin** : l’utilisateur décrit son projet et choisit un cas d’usage (retrieval, classification, clustering, etc.).
-- 🤖 **Recommandation IA** : l’application interroge un modèle **Google Gemini 2.5 Flash** pour générer des recommandations sur mesure.
-- 📊 **Benchmark intégré** : les résultats sont basés sur un **fichier CSV** de benchmark public hébergé sur GitHub.
-- 🧩 **Affichage dynamique et ergonomique** : les résultats sont présentés sous forme de **cartes interactives** avec scores, spécifications et justifications.
-- 🎨 **Interface moderne** : design responsive construit avec **TailwindCSS** et **animations fluides** (fade-in, hover, loader).
+**AI Embedding Advisor Pro** est une application web orientée utilisateur qui simplifie et optimise le choix du **modèle d’embeddings** (représentations vectorielles de texte) pour un projet NLP donné.  
+Elle combine une **interface conviviale**, un **benchmark public MTEB** et une **intelligence artificielle** pour recommander les modèles les mieux adaptés à vos besoins : multilingue, performance, latence, longueur de texte, etc.
 
 ---
 
-## 🏗️ Structure du projet
+##  Objectif du projet
+
+Les embeddings jouent un rôle central dans les applications NLP : recherche d’information, classification, clustering, reranking, similarité de texte (STS), etc.  
+Cependant, le paysage des modèles est vaste, et le choix optimal dépend de nombreux critères (taille, dimension, multilinguisme, rapidité, précision).
+
+Ce projet vise à :
+
+- Permettre à un utilisateur de **décrire son besoin en langage naturel**.  
+- Utiliser un **modèle IA** pour interpréter la demande.  
+- Croiser cette interprétation avec les résultats du **benchmark MTEB**.  
+- Générer un **Top 3 de modèles d’embeddings** justifiés et contextualisés.  
+- Offrir une **interface claire et moderne** pour explorer et comparer les résultats.
+
+---
+
+##  Fonctionnalités principales
+
+-  **Analyse automatique du besoin utilisateur**  
+-  **Recommandation IA**  
+-  **Benchmark intégré basé sur MTEB**  
+-  **Affichage ergonomique et interactif (TailwindCSS)**  
+-  **Projet front‑end pur** déployable sur GitHub Pages, Netlify ou Vercel  
+
+---
+
+##  Structure du projet
 
 ```
-AI-Embedding-Advisor-Pro/
+AI‑Embedding‑Advisor‑Pro/
 │
-├── index.html           # Page principale de l’application
-├── benchmark_data.csv   # Données de benchmark chargées depuis GitHub
-├── README.md            # Ce fichier
-└── assets/              # (optionnel) Dossier pour icônes, polices, etc.
+├── src/                     # Fichiers sources
+│   ├── index.html            # Structure principale de l’application
+│   ├── style.css             # Styles personnalisés
+│   └── main.js               # Logique principale (analyse IA et affichage)
+│
+├── benchmark_data.csv        # Données de benchmark (MTEB)
+├── .env                      # (à créer) Contient la clé API Gemini
+├── .env.example              # Modèle du fichier .env
+├── .gitignore                # Exclut .env et fichiers temporaires
+│
+├── Dockerfile                # Image Docker pour déploiement
+├── docker-compose.yml        # Orchestration du conteneur
+├── docker-entrypoint.sh       # Injection dynamique de la clé API
+├── run_docker.sh             # Script pour démarrer facilement
+│
+└── README.md                 # (Ce fichier)
 ```
 
 ---
 
-## ⚙️ Technologies utilisées
+##  Technologies utilisées
 
 | Technologie | Description |
 |--------------|--------------|
-| **HTML5 / CSS3 / JS** | Application entièrement front-end |
-| **TailwindCSS** | Framework CSS utilitaire pour le design réactif |
-| **Google Gemini API** | Modèle de langage utilisé pour l’analyse et la génération des recommandations |
-| **GitHub Raw CSV** | Source de données du benchmark des modèles |
-| **Google Fonts (Inter)** | Police moderne et lisible |
+| **HTML5 / CSS3 / JavaScript** | Application front‑end légère |
+| **TailwindCSS** | Framework CSS moderne et responsive |
+| **Google Gemini 2.5 API** | Génération et analyse des recommandations |
+| **MTEB Benchmark (Hugging Face)** | Données d’évaluation des modèles |
+| **Docker & Docker Compose** | Conteneurisation et déploiement |
+| **Nginx** | Serveur web embarqué dans l’image Docker |
 
 ---
 
-## 🧩 Fonctionnement
+##  Fonctionnement interne
 
-1. **Saisie du besoin**  
-   L’utilisateur décrit son projet et choisit un cas d’usage principal (Retrieval, Classification, Clustering, Reranking, STS).
-
-2. **Chargement du benchmark**  
-   Le script charge le fichier `benchmark_data.csv` depuis GitHub via `fetch()`.
-
-3. **Appel au modèle Gemini**  
-   Le prompt système et la description utilisateur sont envoyés à l’API :
-   ```
-   https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent
-   ```
-   avec un schéma JSON défini pour garantir une réponse structurée.
-
-4. **Affichage des recommandations**  
-   Le top 3 est affiché avec :
-   - Le **nom du modèle**
-   - Son **score sur la tâche choisie**
-   - Ses **spécifications techniques**
-   - Une **justification détaillée**
+1. L’utilisateur saisit une description et choisit un cas d’usage (retrieval, clustering, etc.).  
+2. Le script charge `benchmark_data.csv` depuis GitHub.  
+3. Les données et la description sont envoyées à **Gemini AI**.  
+4. Gemini renvoie un **Top 3 structuré en JSON**.  
+5. L’interface affiche les modèles recommandés avec :  
+   - le **score** par tâche,  
+   - les **paramètres techniques**,  
+   - une **justification IA personnalisée**.
 
 ---
 
-## 🧰 Installation et exécution
+##  Gestion sécurisée de la clé API
 
-### Option 1 — Localement
-1. Clone le dépôt :
-   ```bash
-   git clone https://github.com/samir-aitabbou/AI-Embedding-Advisor-Pro.git
-   cd AI-Embedding-Advisor-Pro
-   ```
+Le projet utilise un mécanisme d’**injection via Docker** :  
 
-2. Ouvre simplement le fichier :
-   ```bash
-   open index.html
+1. `main.js` contient un placeholder :  
+   ```js
+   const apiKey = "GEMINI_API_KEY_PLACEHOLDER";
    ```
-   ou fais un double-clic dessus (aucun serveur requis).
+2. Le `Dockerfile` copie ce fichier en `main.js.template`.  
+3. Le script `docker-entrypoint.sh` remplace le placeholder par la clé réelle du `.env`.  
+4. L’application est servie via **Nginx** avec la clé intégrée dynamiquement.  
+
+⚠️ **Avertissement :**  
+Bien que cette méthode évite de stocker la clé en clair dans le code source, la clé reste accessible côté client.  
+Pour un usage en production, créez un **backend sécurisé (Node, Python, etc.)** pour appeler l’API Gemini côté serveur.
 
 ---
 
-### Option 2 — Hébergement en ligne
-Tu peux déployer le projet gratuitement sur :
-- [GitHub Pages](https://pages.github.com)
-- [Netlify](https://www.netlify.com)
-- [Vercel](https://vercel.com)
+##  Benchmark MTEB
+
+Le **Massive Text Embedding Benchmark (MTEB)** est une référence mondiale pour l’évaluation de modèles d’embeddings.  
+Il couvre plus de **50 ensembles de données multilingues** et **plusieurs centaines de modèles**, évalués sur :
+
+- **Retrieval**
+- **Classification**
+- **Clustering**
+- **Reranking**
+- **Semantic Textual Similarity (STS)**
+
+🔗 Leaderboard officiel : [https://huggingface.co/spaces/mteb/leaderboard](https://huggingface.co/spaces/mteb/leaderboard)  
+📁 Données intégrées : `benchmark_data.csv` (chargé depuis GitHub).
 
 ---
 
-## 🔑 Configuration API
+##  Installation et exécution
 
-Le script utilise l’API **Google Gemini** avec une clé d’API définie dans le code :
+###  Option 1 — Localement
 
-```js
-const apiKey = "AIzaSyBl3jseHBrqSSrv1FP6spyBm0PqMnV6ihQ";
+```bash
+git clone https://github.com/samir-aitabbou/AI-Embedding-Advisor-Pro.git
+cd AI-Embedding-Advisor-Pro
+open index.html
 ```
 
-> ⚠️ **Important :** pour un usage en production, il est fortement recommandé de :
-> - Créer ta propre clé API Google AI Studio  
-> - La stocker côté serveur (et non en clair dans le code client)
-> - Configurer un proxy ou backend intermédiaire pour sécuriser les appels
+### 🐳 Option 2 — Avec Docker
 
----
-
-## 📈 Données de benchmark
-
-Le benchmark est chargé depuis un fichier CSV hébergé sur GitHub :
-```js
-https://raw.githubusercontent.com/samir-aitabbou/AI-Embedding-Advisor-Pro/refs/heads/master/benchmark_data.csv
+```bash
+./run_docker.sh
 ```
 
-Chaque ligne du CSV correspond à un modèle avec ses performances sur plusieurs tâches (`Retrieval`, `Classification`, `Clustering`, etc.), ainsi que ses caractéristiques (`Parameters`, `Dimensions`, `Multilingual`, `Max_Tokens`, ...).
+Ce script :
+1. Arrête toute instance existante (`docker-compose down`)  
+2. Reconstruit l’image (`docker-compose build`)  
+3. Lance l’application (`docker-compose up -d`)  
+
+Puis ouvrez : [http://localhost:8080](http://localhost:8080)
 
 ---
 
-## 💡 Exemple d’utilisation
+##  Exemple d’utilisation
 
-**Description :**
-> “Je construis un chatbot pour un site e-commerce multilingue. Il doit répondre rapidement aux questions sur les produits.”
+**Description :**  
+> “Je construis un chatbot multilingue pour un site e-commerce. Il doit répondre rapidement aux questions produits.”
 
-**Cas d’usage :**
-> Retrieval
+**Cas d’usage :**  
+> Retrieval  
 
 **Résultat attendu :**
-- **Top 3** modèles d’embeddings recommandés
-- Scores, paramètres et dimensions
-- Justifications détaillées adaptées au contexte multilingue
+- Top 3 modèles recommandés  
+- Scores et dimensions  
+- Justifications contextualisées par Gemini  
 
 ---
 
-## 🧑‍💻 Auteur
+##  Données de benchmark
 
-👤 **Samir Aitabbou**  
+Chargées depuis :  
+```
+https://raw.githubusercontent.com/samir-aitabbou/AI-Embedding-Advisor-Pro/refs/heads/master/benchmark_data.csv
+```
+Chaque ligne du CSV correspond à un modèle avec :
+- ses scores par tâche (`Retrieval`, `Classification`, etc.)  
+- ses spécifications (`Parameters`, `Dimensions`, `Multilingual`, etc.)
+
+---
+
+##  Auteur
+
+**Samir Aitabbou**  
 📧 [samir.aitabbou@gmail.com](mailto:samir.aitabbou@gmail.com)  
-🌐 [GitHub - samir-aitabbou](https://github.com/samir-aitabbou)
+🌐 [GitHub – samir‑aitabbou](https://github.com/samir-aitabbou)
 
 ---
 
-## 📜 Licence
+##  Licence
 
-Ce projet est distribué sous licence **MIT** — libre de l’utiliser, le modifier et le distribuer.
+Distribué sous licence **MIT** — libre d’utilisation, de modification et de distribution.

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  # Nom de votre service
+  ai-advisor-pro:
+    # Construit l'image à partir du Dockerfile dans le dossier actuel
+    build: .
+    # Nom du conteneur
+    container_name: ai_advisor_pro_app
+    ports:
+      # Mappe le port 8080 de votre machine au port 80 du conteneur
+      - "8080:80"
+    env_file:
+      # Charge les variables d'environnement depuis le fichier .env
+      - .env
+    # Redémarre automatiquement le conteneur s'il plante
+    restart: unless-stopped
