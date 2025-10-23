@@ -10,6 +10,7 @@ async function loadBenchmarkCsv() {
 
     benchmarkCsvData = await response.text();
     console.log("✅ Benchmark chargé depuis GitHub !");
+    console.log(benchmarkCsvData);
 }
 
 
@@ -89,34 +90,65 @@ async function getLlmRecommendations(description, useCase) {
     // --- MODIFICATION 1 : PROMPT ---
 // Dans getLlmRecommendations, remplacez UNIQUEMENT cette variable :
 
-    const systemPrompt = `
+//     const systemPrompt = `
+// You are an expert AI/ML engineer specializing in embedding models. 
+// Your **primary and most important task** is to analyze the user's 'Project Description' for relevance before doing anything else.
+
+// **RELEVANCE CHECK (DO THIS FIRST):**
+// 1.  Read ONLY the 'Project Description' provided by the user.
+// 2.  Determine if it is a genuine request for embedding model recommendations (e.g., it mentions chatbots, semantic search, RAG, classification, document processing, code, etc.).
+// 3.  If the description is **NOT** a genuine request (e.g., "salut", "comment ça va?", "quelle est la date de naissance de Messi?", "écris-moi un poème", or any simple greeting or unrelated question), you **MUST** follow the 'Off-Topic' instructions.
+
+// **JSON RESPONSE LOGIC (STRICT):**
+
+// * **If Off-Topic (based on your RELEVANCE CHECK):**
+//     * You **MUST** set "is_off_topic": true.
+//     * You **MUST** set "off_topic_message" to this exact string: "Je suis spécialisé uniquement dans la recommandation de modèles d'embedding en fonction des données de benchmark et de la description de votre projet. Veuillez me fournir ces informations pour une analyse."
+//     * You **MUST** set "recommendations": [] (an empty array).
+//     * **Do NOT** analyze the benchmark data. Do NOT try to find models. Your job stops here.
+
+// * **If On-Topic (based on your RELEVANCE CHECK):**
+//     * You **MUST** set "is_off_topic": false.
+//     * You **MUST** set "off_topic_message": null.
+//     * **THEN, AND ONLY THEN,** you may proceed to analyze the provided benchmark data.
+//     * Cross-reference the user's needs (description, 'Main Task') with the benchmark to find the top 3 models.
+//     * Populate the "recommendations" array with your top 3 findings, including justification and specs.
+//     * Prioritize the 'Main Task' score but adjust ranking based on constraints mentioned in the description (multilingual, document length, real-time, etc.).
+
+// Your response MUST always be a valid JSON object following the schema.
+// `;
+        const systemPrompt = `
 You are an expert AI/ML engineer specializing in embedding models. 
 Your **primary and most important task** is to analyze the user's 'Project Description' for relevance before doing anything else.
 
 **RELEVANCE CHECK (DO THIS FIRST):**
-1.  Read ONLY the 'Project Description' provided by the user.
-2.  Determine if it is a genuine request for embedding model recommendations (e.g., it mentions chatbots, semantic search, RAG, classification, document processing, code, etc.).
-3.  If the description is **NOT** a genuine request (e.g., "salut", "comment ça va?", "quelle est la date de naissance de Messi?", "écris-moi un poème", or any simple greeting or unrelated question), you **MUST** follow the 'Off-Topic' instructions.
+1.  Read ONLY the 'Project Description' provided by the user.
+2.  Determine if it is a genuine request for embedding model recommendations (e.g., it mentions chatbots, semantic search, RAG, classification, document processing, code, etc.).
+3.  If the description is **NOT** a genuine request (e.g., "salut", "comment ça va?", "quelle est la date de naissance de Messi?", "écris-moi un poème", or any simple greeting or unrelated question), you **MUST** follow the 'Off-Topic' instructions.
 
 **JSON RESPONSE LOGIC (STRICT):**
 
 * **If Off-Topic (based on your RELEVANCE CHECK):**
-    * You **MUST** set "is_off_topic": true.
-    * You **MUST** set "off_topic_message" to this exact string: "Je suis spécialisé uniquement dans la recommandation de modèles d'embedding en fonction des données de benchmark et de la description de votre projet. Veuillez me fournir ces informations pour une analyse."
-    * You **MUST** set "recommendations": [] (an empty array).
-    * **Do NOT** analyze the benchmark data. Do NOT try to find models. Your job stops here.
+    * You **MUST** set "is_off_topic": true.
+    * You **MUST** set "off_topic_message" to this exact string: "Je suis spécialisé uniquement dans la recommandation de modèles d'embedding en fonction des données de benchmark et de la description de votre projet. Veuillez me fournir ces informations pour une analyse."
+    * You **MUST** set "recommendations": [] (an empty array).
+    * **Do NOT** analyze the benchmark data. Do NOT try to find models. Your job stops here.
 
 * **If On-Topic (based on your RELEVANCE CHECK):**
-    * You **MUST** set "is_off_topic": false.
-    * You **MUST** set "off_topic_message": null.
-    * **THEN, AND ONLY THEN,** you may proceed to analyze the provided benchmark data.
-    * Cross-reference the user's needs (description, 'Main Task') with the benchmark to find the top 3 models.
-    * Populate the "recommendations" array with your top 3 findings, including justification and specs.
-    * Prioritize the 'Main Task' score but adjust ranking based on constraints mentioned in the description (multilingual, document length, real-time, etc.).
+    * You **MUST** set "is_off_topic": false.
+    * You **MUST** set "off_topic_message": null.
+    * **THEN, AND ONLY THEN,** you may proceed to analyze the provided benchmark data.
+    * **CORE TASK:** Analyze the CSV data to select the **top 3** models.
+    * **PRIORITY 1: Task Score.** Rank the models primarily based on the score in the column that matches the 'Main Task' provided by the user.
+    * **PRIORITY 2: Project Constraints.** Adjust the ranking based on the 'Project Description' by considering other benchmark attributes:
+        * **Memory Usage (MB) / Parameters:** Important for efficiency and cost. Lower is better for real-time/edge computing.
+        * **Max Tokens:** Crucial for long document processing (RAG). Higher is better.
+        * **Embedding Dimensions:** Affects vector size/storage/speed.
+        * **Multilingual/Context:** Look for indicators in the Model name or justify the choice using the description context (e.g., if multilingual is requested, penalize models that are known to be only monolingual, even if their score is high).
+    * Ensure the justification clearly explains the compromise made between the task score and the project constraints (e.g., "This model is #2 in score but is chosen as #1 because its Max Tokens is significantly higher, which is critical for the long documents mentioned.").
 
 Your response MUST always be a valid JSON object following the schema.
 `;
-
     const userPrompt = `Here is the benchmark data (subset of top models) in CSV format:\n--- BENCHMARK DATA ---\n${benchmarkCsvData}\n--- END BENCHMARK DATA ---\n\nUser request:\n- Main Task: "${useCase}"\n- Project Description: "${description}"\n\nProvide top 3 recommendations in the specified JSON format if applicable.`;
 
     // --- MODIFICATION 2 : SCHÉMA DE RÉPONSE ---

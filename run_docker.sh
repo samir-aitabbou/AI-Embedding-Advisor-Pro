@@ -7,7 +7,8 @@ docker-compose down
 
 echo "Construction de l'image Docker (peut prendre un moment la première fois)..."
 # Construit l'image en suivant les instructions du Dockerfile
-docker-compose build
+# docker-compose build
+docker-compose build --no-cache
 
 echo "Lancement du conteneur en mode détaché..."
 # Lance le conteneur en arrière-plan
