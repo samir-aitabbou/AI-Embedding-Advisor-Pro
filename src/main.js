@@ -63,10 +63,10 @@ async function handleAnalysis() {
     ui.resultsContent.classList.add('hidden');
     ui.error.classList.add('hidden');
     ui.loading.classList.remove('hidden');
-
+    
     try {
         const recommendations = await getLlmRecommendations(description, useCase);
-        displayResults(recommendations, useCase);
+        displayResults(recommendations, useCase); // La fonction displayResults gérera l'affichage
         ui.resultsContent.classList.remove('hidden');
     } catch (err) {
         console.error("Error during LLM analysis:", err);
@@ -80,17 +80,81 @@ async function handleAnalysis() {
     }
 }
 
+
+
 async function getLlmRecommendations(description, useCase) {
-    // !! IMPORTANT !!
-    // La clé API est maintenant un placeholder qui sera injecté par Docker.
-    const apiKey = "GEMINI_API_KEY_PLACEHOLDER";
+    const apiKey = "GEMINI_API_KEY_PLACEHOLDER"; // Note: N'exposez jamais de clés API en production côté client.
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
-    // const systemPrompt = `You are an expert AI/ML engineer specializing in Natural Language Processing and embedding models. Your task is to recommend the top 3 best-suited embedding models for a user based on their project description and a provided benchmark dataset. You must analyze the user's needs for constraints and features like multilingual support, document length, performance requirements (real-time/lightweight), and overall goal. Then, you must cross-reference these needs with the benchmark data to find the best models. Your recommendations should explain the trade-offs (e.g., performance vs. size). The primary factor for ranking is the model's score in the user-specified main task, but you MUST adjust the ranking based on the user's specific textual description. For instance, if the user mentions "plusieurs langues", a model with 'Yes' in the 'Multilingual' column should be prioritized. If the user mentions "longs documents", a model with a high 'Max_Tokens' value is better. If the user mentions "ressources limitées" or "temps-réel", smaller models (lower 'Parameters') are preferable. You MUST provide your response in a structured JSON format. Do not add any text or markdown formatting before or after the JSON object.`;
-    const systemPrompt = "You are an expert AI/ML engineer specializing in Natural Language Processing and embedding models. Your primary task is to recommend the top 3 best-suited embedding models for a user based on their project description and a provided benchmark dataset. You must analyze the user's needs for constraints and features like multilingual support, document length, performance requirements (real-time/lightweight), and overall goal. Then, you must cross-reference these needs with the benchmark data to find the best models. Your recommendations should explain the trade-offs (e.g., performance vs. size). The primary factor for ranking is the model's score in the user-specified main task, but you MUST adjust the ranking based on the user's specific textual description. For instance, if the user mentions \"plusieurs langues\", a model with 'Yes' in the 'Multilingual' column should be prioritized. If the user mentions \"longs documents\", a model with a high 'Max_Tokens' value is better. If the user mentions \"ressources limitées\" or \"temps-réel\", smaller models (lower 'Parameters') are preferable. **CRUCIAL LOGIC: If the user describes a project (e.g., semantic search, RAG, clustering) that fundamentally requires an embedding model, proceed with the recommendation even if they don't explicitly ask for a model. HOWEVER, if the user's request is completely unrelated to NLP, information retrieval, or any task where embedding models are key (i.e., they are 'saying anything'), you MUST respond only with the specialized phrase below, selecting the language (French or English) based on the query, or French if ambiguous: 'Je suis spécialisé uniquement dans la recommandation de modèles d'embedding en fonction des données de benchmark et de la description de votre projet. Veuillez me fournir ces informations pour une analyse.' OR 'I specialize only in recommending embedding models based on benchmark data and your project description. Please provide me with this information for an analysis.'** You MUST provide your response in a structured JSON format when a recommendation is possible. Do not add any text or markdown formatting before or after the JSON object, except for the dedicated out-of-scope response.";
-    const userPrompt = `Here is the benchmark data (subset of top models) in CSV format:\n--- BENCHMARK DATA ---\n${benchmarkCsvData}\n--- END BENCHMARK DATA ---\n\nHere is the user's request:\n- Main Task: "${useCase}"\n- Project Description: "${description}"\n\nPlease provide your top 3 recommendations in the specified JSON format.`;
-    
-    const responseSchema = {"type": "OBJECT", "properties": {"recommendations": {"type": "ARRAY", "description": "An array of the top 3 recommended embedding models.", "items": {"type": "OBJECT", "properties": {"rank": { "type": "NUMBER" }, "model_name": { "type": "STRING" }, "score_for_task": { "type": "NUMBER" }, "justification": { "type": "STRING" }, "key_specs": {"type": "OBJECT", "properties": {"Max_Tokens": { "type": "STRING" }, "Parameters": { "type": "STRING" }, "Dimensions": { "type": "STRING" }}}}}}}};
+    // --- MODIFICATION 1 : PROMPT ---
+// Dans getLlmRecommendations, remplacez UNIQUEMENT cette variable :
+
+    const systemPrompt = `
+You are an expert AI/ML engineer specializing in embedding models. 
+Your **primary and most important task** is to analyze the user's 'Project Description' for relevance before doing anything else.
+
+**RELEVANCE CHECK (DO THIS FIRST):**
+1.  Read ONLY the 'Project Description' provided by the user.
+2.  Determine if it is a genuine request for embedding model recommendations (e.g., it mentions chatbots, semantic search, RAG, classification, document processing, code, etc.).
+3.  If the description is **NOT** a genuine request (e.g., "salut", "comment ça va?", "quelle est la date de naissance de Messi?", "écris-moi un poème", or any simple greeting or unrelated question), you **MUST** follow the 'Off-Topic' instructions.
+
+**JSON RESPONSE LOGIC (STRICT):**
+
+* **If Off-Topic (based on your RELEVANCE CHECK):**
+    * You **MUST** set "is_off_topic": true.
+    * You **MUST** set "off_topic_message" to this exact string: "Je suis spécialisé uniquement dans la recommandation de modèles d'embedding en fonction des données de benchmark et de la description de votre projet. Veuillez me fournir ces informations pour une analyse."
+    * You **MUST** set "recommendations": [] (an empty array).
+    * **Do NOT** analyze the benchmark data. Do NOT try to find models. Your job stops here.
+
+* **If On-Topic (based on your RELEVANCE CHECK):**
+    * You **MUST** set "is_off_topic": false.
+    * You **MUST** set "off_topic_message": null.
+    * **THEN, AND ONLY THEN,** you may proceed to analyze the provided benchmark data.
+    * Cross-reference the user's needs (description, 'Main Task') with the benchmark to find the top 3 models.
+    * Populate the "recommendations" array with your top 3 findings, including justification and specs.
+    * Prioritize the 'Main Task' score but adjust ranking based on constraints mentioned in the description (multilingual, document length, real-time, etc.).
+
+Your response MUST always be a valid JSON object following the schema.
+`;
+
+    const userPrompt = `Here is the benchmark data (subset of top models) in CSV format:\n--- BENCHMARK DATA ---\n${benchmarkCsvData}\n--- END BENCHMARK DATA ---\n\nUser request:\n- Main Task: "${useCase}"\n- Project Description: "${description}"\n\nProvide top 3 recommendations in the specified JSON format if applicable.`;
+
+    // --- MODIFICATION 2 : SCHÉMA DE RÉPONSE ---
+    const responseSchema = {
+        "type": "OBJECT",
+        "properties": {
+            "is_off_topic": {
+                "type": "BOOLEAN",
+                "description": "Set to true if the user's request is unrelated to embedding models."
+            },
+            "off_topic_message": {
+                "type": "STRING",
+                "description": "The refusal message to show if is_off_topic is true. (Optional)"
+            },
+            "recommendations": {
+                "type": "ARRAY",
+                "description": "An array of the top 3 recommended embedding models. (Should be null or empty if is_off_topic is true)",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "rank": { "type": "NUMBER" },
+                        "model_name": { "type": "STRING" },
+                        "score_for_task": { "type": "NUMBER" },
+                        "justification": { "type": "STRING" },
+                        "key_specs": {
+                            "type": "OBJECT",
+                            "properties": {
+                                "Max_Tokens": { "type": "STRING" },
+                                "Parameters": { "type": "STRING" },
+                                "Dimensions": { "type": "STRING" }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "required": ["is_off_topic"] // Seul ce champ est maintenant requis
+    };
 
     const payload = {
         contents: [{ parts: [{ text: userPrompt }] }],
@@ -104,19 +168,68 @@ async function getLlmRecommendations(description, useCase) {
         body: JSON.stringify(payload)
     });
 
+    // --- MODIFICATION 3 : GESTION DE LA RÉPONSE ---
+
     if (!response.ok) {
         const errorBody = await response.text();
         throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorBody}`);
     }
 
     const result = await response.json();
-    const jsonText = result.candidates[0].content.parts[0].text;
-    return JSON.parse(jsonText);
+
+    // Vérification de sécurité pour la réponse de l'API
+    if (!result.candidates || !result.candidates[0].content || !result.candidates[0].content.parts[0].text) {
+        console.error("Réponse invalide ou malformée de l'API Gemini:", result);
+        throw new Error("Réponse invalide de l'API LLM.");
+    }
+    
+    const jsonText = result.candidates[0].content.parts[0].text.trim();
+    let parsedResponse;
+
+    try {
+        parsedResponse = JSON.parse(jsonText);
+    } catch (e) {
+        console.error("Erreur de parsing du JSON retourné:", jsonText);
+        throw new Error("Le LLM a retourné un JSON invalide.");
+    }
+    
+    // 1. Vérifier si la requête était hors sujet
+    if (parsedResponse.is_off_topic === true) {
+        // C'est hors sujet. Nous retournons un objet "recommandation" spécial
+        // que la fonction displayResults() saura afficher comme un message.
+        return { 
+            recommendations: [{ 
+                rank: 0, // Un rang 0 ou spécial
+                model_name: "Requête Hors Sujet", 
+                score_for_task: 0, 
+                justification: parsedResponse.off_topic_message || "La demande n'est pas liée à la recommandation de modèles d'embedding.", 
+                key_specs: { Max_Tokens: "-", Parameters: "-", Dimensions: "-" } 
+            }] 
+        };
+    }
+
+    // 2. Si ce n'est pas hors sujet, retourner les recommandations normalement
+    if (parsedResponse.recommendations && parsedResponse.recommendations.length > 0) {
+         return parsedResponse;
+    }
+   
+    // 3. Cas de secours si le JSON est valide mais vide (pas de recommandations trouvées)
+    return { 
+        recommendations: [{ 
+            rank: 0,
+            model_name: "Aucun modèle trouvé", 
+            score_for_task: 0, 
+            justification: "L'IA n'a pas pu trouver de modèle correspondant précisément à vos critères dans le benchmark. Essayez de reformuler votre demande.", 
+            key_specs: { Max_Tokens: "-", Parameters: "-", Dimensions: "-" } 
+        }] 
+    };
 }
+
+
 
 function displayResults(data, useCase) {
     const resultsContent = document.getElementById('results-content');
-    resultsContent.innerHTML = '';
+    resultsContent.innerHTML = ''; 
 
     if (!data.recommendations || data.recommendations.length === 0) {
         resultsContent.innerHTML = `<p class="text-gray-600">Le LLM n'a pas pu fournir de recommandation pour cette demande.</p>`;
@@ -124,9 +237,31 @@ function displayResults(data, useCase) {
     }
 
     data.recommendations.forEach((rec, index) => {
+        // Logique spéciale pour afficher le message hors-sujet ou "aucun résultat"
+        if (rec.rank === 0) {
+            const card = `
+                <div class="result-card fade-in p-6 rounded-2xl border bg-white text-gray-800 shadow-lg border-gray-200" style="animation-delay: ${index * 150}ms;">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <span class="text-sm font-semibold text-indigo-600">Information</span>
+                            <h3 class="text-2xl font-bold text-gray-900 mt-1">${rec.model_name}</h3>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="mt-2 text-sm text-gray-600">
+                            ${rec.justification}
+                        </div>
+                    </div>
+                </div>
+            `;
+            resultsContent.innerHTML += card;
+            return; // Passe à la recommandation suivante (s'il y en a)
+        }
+        
+        // Logique d'affichage normale pour les vraies recommandations
         const isTopPick = rec.rank === 1;
-        const cardClass = isTopPick
-            ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-2xl border-transparent'
+        const cardClass = isTopPick 
+            ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-2xl border-transparent' 
             : 'bg-white text-gray-800 shadow-lg border-gray-200';
         const titleClass = isTopPick ? 'text-white' : 'text-gray-900';
         const subtitleClass = isTopPick ? 'text-indigo-200' : 'text-gray-500';
